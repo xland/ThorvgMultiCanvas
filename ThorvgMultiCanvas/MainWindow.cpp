@@ -9,6 +9,7 @@
 
 MainWindow::MainWindow()
 {
+    tvg::Initializer::init(tvg::CanvasEngine::Gl, 4);
 	initWinPosSize();
 	initImgs();
     initWindow();
@@ -113,11 +114,29 @@ LRESULT MainWindow::processWinMsg(UINT msg, WPARAM wParam, LPARAM lParam)
             paint();
             PAINTSTRUCT ps;
             auto hdc = BeginPaint(hwnd, &ps);
-            //BITMAPINFO bmi = { sizeof(BITMAPINFOHEADER), w, 0 - h, 1, 32, BI_RGB, h * 4 * w, 0, 0, 0, 0 };
-            //SetDIBitsToDevice(dc, 0, 0, w, h, 0, 0, 0, h, imgBoard.bits(), &bmi, DIB_RGB_COLORS);
 
-            glClearColor(0.2f, 0.8f, 0.1f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT);
+            RECT rect;
+            GetClientRect(hwnd, &rect);
+            uint32_t x = rect.left;
+            uint32_t y = rect.top;
+            uint32_t w = rect.right - rect.left;
+            uint32_t h = rect.bottom - rect.top;
+            GLFrameBuffer glFbo(w, h);
+
+            auto canvas = tvg::GlCanvas::gen();
+            canvas->target(glFbo.fbo, w, h);
+            auto bg = tvg::Shape::gen();
+            bg->appendRect(10, 10, 160, 160);
+            bg->fill(116, 125, 255);
+            canvas->push(std::move(bg));
+            canvas->draw();
+            canvas->sync();
+
+            //glFbo.blitToScreen(300, 300, w, h);
+
+            //glClearColor(0.0f, 0.6f, 0.6f, 1.0f);
+            //glClear(GL_COLOR_BUFFER_BIT);
+            glFbo.blitToScreen(0, 0, w, h);
             SwapBuffers(hdc);
 
 

@@ -4,7 +4,9 @@ project(ThorvgMultiCanvas)
 set(CMAKE_CXX_STANDARD 20)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    link_directories("D:\\sdk\\thorvg\\build\\debug")
+    link_directories(
+        "D:\\sdk\\thorvg\\build\\debug"
+    )
 elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
     link_directories("D:\\sdk\\thorvg\\build\\release")
 endif()
@@ -16,7 +18,7 @@ target_sources(ThorvgMultiCanvas PRIVATE
 	main.cpp
 	MainWindow.h
 	MainWindow.cpp
-)
+ "GLPre.h")
 
 
 if(WIN32)
