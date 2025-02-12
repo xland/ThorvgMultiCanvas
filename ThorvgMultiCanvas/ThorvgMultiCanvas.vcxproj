@@ -142,12 +142,15 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="GLPre.h" />
+    <ClInclude Include="GLHelper.h" />
     <ClInclude Include="MainWindow.h" />
+    <ClInclude Include="RasterHelper.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="GLHelper.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MainWindow.cpp" />
+    <ClCompile Include="RasterHelper.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

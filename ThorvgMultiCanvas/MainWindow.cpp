@@ -3,13 +3,13 @@
 #include <thorvg.h>
 #include <gl/GL.h>
 #include <gl/GLU.h>
-#include "GLPre.h"
 #include "MainWindow.h"
 
 
 MainWindow::MainWindow()
 {
-    tvg::Initializer::init(tvg::CanvasEngine::Gl, 4);
+    //tvg::Initializer::init(tvg::CanvasEngine::Gl, 4);
+    tvg::Initializer::init(tvg::CanvasEngine::Sw, 4);
 	initWinPosSize();
 	initImgs();
     initWindow();
@@ -36,7 +36,9 @@ void MainWindow::initWindow()
     auto style = WS_OVERLAPPEDWINDOW;
     hwnd = CreateWindowEx(NULL ,L"ScreenCapture", L"ScreenCapture", style, x, y, w, h, NULL, NULL, hinstance, NULL);
     SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
-    runGl(hwnd);
+    //runGl(hwnd);
+    //glHelper = std::make_unique<GLHelper>(hwnd);
+    rasterHelper = std::make_unique<RasterHelper>(hwnd);
 
 }
 void MainWindow::show()
@@ -44,6 +46,12 @@ void MainWindow::show()
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
     SetCursor(LoadCursor(nullptr, IDC_ARROW));
+
+    HDC hdc = GetDC(hwnd);
+    
+
+    //glFbo.blitToScreen(0, 0, w, h);
+    //SwapBuffers(hdc);
 
 }
 void MainWindow::initWinPosSize()
@@ -65,7 +73,14 @@ void MainWindow::initImgs()
 
 void MainWindow::paint()
 {
-
+    //auto canvas = glHelper->getCanvas();
+    auto canvas = rasterHelper->getCanvas();
+    auto bg = tvg::Shape::gen();
+    bg->appendRect(w-200, h-200, 160, 160);
+    bg->fill(116, 125, 255);
+    canvas->push(std::move(bg));
+    canvas->draw();
+    canvas->sync();
 }
 LRESULT MainWindow::routeWinMsg(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -75,14 +90,18 @@ LRESULT MainWindow::routeWinMsg(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
     }
     switch (msg)
     {
-        case WM_NCCALCSIZE:
+        //case WM_NCCALCSIZE:
+        //{
+        //    if (wParam == TRUE) {
+        //        NCCALCSIZE_PARAMS* pncsp = reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam);
+        //        pncsp->rgrc[0] = pncsp->rgrc[1]; //窗口客户区覆盖整个窗口
+        //        return 0; //确认改变窗口客户区
+        //    }
+        //    return DefWindowProc(hWnd, msg, wParam, lParam);
+        //}
+        case WM_ERASEBKGND:
         {
-            if (wParam == TRUE) {
-                NCCALCSIZE_PARAMS* pncsp = reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam);
-                pncsp->rgrc[0] = pncsp->rgrc[1]; //窗口客户区覆盖整个窗口
-                return 0; //确认改变窗口客户区
-            }
-            return DefWindowProc(hWnd, msg, wParam, lParam);
+            return TRUE;
         }
         case WM_CLOSE:
         {
@@ -104,42 +123,26 @@ LRESULT MainWindow::routeWinMsg(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 LRESULT MainWindow::processWinMsg(UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
-    {
+    {      
         case WM_MOVE: {
             x = LOWORD(lParam);
             y = HIWORD(lParam);
             return 0;
         }
+        case WM_SIZE: {
+            //todo minimize
+            w = LOWORD(lParam);
+            h = HIWORD(lParam);
+            //glHelper->resize();
+            rasterHelper->resize();
+            return 0;
+        }
         case WM_PAINT: {
-            paint();
             PAINTSTRUCT ps;
             auto hdc = BeginPaint(hwnd, &ps);
-
-            RECT rect;
-            GetClientRect(hwnd, &rect);
-            uint32_t x = rect.left;
-            uint32_t y = rect.top;
-            uint32_t w = rect.right - rect.left;
-            uint32_t h = rect.bottom - rect.top;
-            GLFrameBuffer glFbo(w, h);
-
-            auto canvas = tvg::GlCanvas::gen();
-            canvas->target(glFbo.fbo, w, h);
-            auto bg = tvg::Shape::gen();
-            bg->appendRect(10, 10, 160, 160);
-            bg->fill(116, 125, 255);
-            canvas->push(std::move(bg));
-            canvas->draw();
-            canvas->sync();
-
-            //glFbo.blitToScreen(300, 300, w, h);
-
-            //glClearColor(0.0f, 0.6f, 0.6f, 1.0f);
-            //glClear(GL_COLOR_BUFFER_BIT);
-            glFbo.blitToScreen(0, 0, w, h);
-            SwapBuffers(hdc);
-
-
+            paint();
+            //glHelper->blitToScreen(hdc);
+            rasterHelper->blitToScreen(hdc);
             ReleaseDC(hwnd, hdc);
             EndPaint(hwnd, &ps);
             return 0;
