@@ -1,5 +1,8 @@
 #pragma once
 #include <Windows.h>
+#include <memory>
+#include "GLHelper.h"
+#include "RasterHelper.h"
 
 class MainWindow
 {
@@ -25,4 +28,6 @@ private:
 	static LRESULT CALLBACK routeWinMsg(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 	LRESULT CALLBACK processWinMsg(UINT msg, WPARAM wParam, LPARAM lParam);
 private:
+	std::unique_ptr<GLHelper> glHelper;
+	std::unique_ptr<RasterHelper> rasterHelper;
 };

@@ -3,12 +3,13 @@
 #include <thorvg.h>
 #include <gl/GL.h>
 #include <gl/GLU.h>
-#include "GLPre.h"
 #include "MainWindow.h"
 
 
 MainWindow::MainWindow()
 {
+    tvg::Initializer::init(tvg::CanvasEngine::Gl, 1);
+    //tvg::Initializer::init(tvg::CanvasEngine::Sw, 4);
 	initWinPosSize();
 	initImgs();
     initWindow();
@@ -35,7 +36,8 @@ void MainWindow::initWindow()
     auto style = WS_OVERLAPPEDWINDOW;
     hwnd = CreateWindowEx(NULL ,L"ScreenCapture", L"ScreenCapture", style, x, y, w, h, NULL, NULL, hinstance, NULL);
     SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
-    runGl(hwnd);
+    glHelper = std::make_unique<GLHelper>(hwnd);
+    //rasterHelper = std::make_unique<RasterHelper>(hwnd);
 
 }
 void MainWindow::show()
@@ -43,15 +45,9 @@ void MainWindow::show()
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
     SetCursor(LoadCursor(nullptr, IDC_ARROW));
-
 }
 void MainWindow::initWinPosSize()
 {
-    //x = GetSystemMetrics(SM_XVIRTUALSCREEN);
-    //y = GetSystemMetrics(SM_YVIRTUALSCREEN);
-    //w = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-    //h = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-
     x = 300;
     y = 300;
     w = 1000;
@@ -64,7 +60,14 @@ void MainWindow::initImgs()
 
 void MainWindow::paint()
 {
-
+    auto canvas = glHelper->getCanvas();
+    //auto canvas = rasterHelper->getCanvas();
+    auto bg = tvg::Shape::gen();
+    bg->appendRect(w-200, h-200, 160, 160);
+    bg->fill(116, 125, 255);
+    canvas->push(std::move(bg));
+    canvas->draw();
+    canvas->sync();
 }
 LRESULT MainWindow::routeWinMsg(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -74,14 +77,18 @@ LRESULT MainWindow::routeWinMsg(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
     }
     switch (msg)
     {
-        case WM_NCCALCSIZE:
+        //case WM_NCCALCSIZE:
+        //{
+        //    if (wParam == TRUE) {
+        //        NCCALCSIZE_PARAMS* pncsp = reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam);
+        //        pncsp->rgrc[0] = pncsp->rgrc[1]; //窗口客户区覆盖整个窗口
+        //        return 0; //确认改变窗口客户区
+        //    }
+        //    return DefWindowProc(hWnd, msg, wParam, lParam);
+        //}
+        case WM_ERASEBKGND:
         {
-            if (wParam == TRUE) {
-                NCCALCSIZE_PARAMS* pncsp = reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam);
-                pncsp->rgrc[0] = pncsp->rgrc[1]; //窗口客户区覆盖整个窗口
-                return 0; //确认改变窗口客户区
-            }
-            return DefWindowProc(hWnd, msg, wParam, lParam);
+            return TRUE;
         }
         case WM_CLOSE:
         {
@@ -103,24 +110,26 @@ LRESULT MainWindow::routeWinMsg(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 LRESULT MainWindow::processWinMsg(UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
-    {
+    {      
         case WM_MOVE: {
             x = LOWORD(lParam);
             y = HIWORD(lParam);
             return 0;
         }
+        case WM_SIZE: {
+            //todo minimize
+            w = LOWORD(lParam);
+            h = HIWORD(lParam);
+            glHelper->resize();
+            //rasterHelper->resize();
+            return 0;
+        }
         case WM_PAINT: {
-            paint();
             PAINTSTRUCT ps;
             auto hdc = BeginPaint(hwnd, &ps);
-            //BITMAPINFO bmi = { sizeof(BITMAPINFOHEADER), w, 0 - h, 1, 32, BI_RGB, h * 4 * w, 0, 0, 0, 0 };
-            //SetDIBitsToDevice(dc, 0, 0, w, h, 0, 0, 0, h, imgBoard.bits(), &bmi, DIB_RGB_COLORS);
-
-            glClearColor(0.2f, 0.8f, 0.1f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT);
-            SwapBuffers(hdc);
-
-
+            paint();
+            glHelper->blitToScreen(hdc);
+            //rasterHelper->blitToScreen(hdc);
             ReleaseDC(hwnd, hdc);
             EndPaint(hwnd, &ps);
             return 0;
