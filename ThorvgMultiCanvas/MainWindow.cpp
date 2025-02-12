@@ -8,8 +8,8 @@
 
 MainWindow::MainWindow()
 {
-    //tvg::Initializer::init(tvg::CanvasEngine::Gl, 4);
-    tvg::Initializer::init(tvg::CanvasEngine::Sw, 4);
+    tvg::Initializer::init(tvg::CanvasEngine::Gl, 1);
+    //tvg::Initializer::init(tvg::CanvasEngine::Sw, 4);
 	initWinPosSize();
 	initImgs();
     initWindow();
@@ -36,9 +36,8 @@ void MainWindow::initWindow()
     auto style = WS_OVERLAPPEDWINDOW;
     hwnd = CreateWindowEx(NULL ,L"ScreenCapture", L"ScreenCapture", style, x, y, w, h, NULL, NULL, hinstance, NULL);
     SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
-    //runGl(hwnd);
-    //glHelper = std::make_unique<GLHelper>(hwnd);
-    rasterHelper = std::make_unique<RasterHelper>(hwnd);
+    glHelper = std::make_unique<GLHelper>(hwnd);
+    //rasterHelper = std::make_unique<RasterHelper>(hwnd);
 
 }
 void MainWindow::show()
@@ -46,21 +45,9 @@ void MainWindow::show()
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
     SetCursor(LoadCursor(nullptr, IDC_ARROW));
-
-    HDC hdc = GetDC(hwnd);
-    
-
-    //glFbo.blitToScreen(0, 0, w, h);
-    //SwapBuffers(hdc);
-
 }
 void MainWindow::initWinPosSize()
 {
-    //x = GetSystemMetrics(SM_XVIRTUALSCREEN);
-    //y = GetSystemMetrics(SM_YVIRTUALSCREEN);
-    //w = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-    //h = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-
     x = 300;
     y = 300;
     w = 1000;
@@ -73,8 +60,8 @@ void MainWindow::initImgs()
 
 void MainWindow::paint()
 {
-    //auto canvas = glHelper->getCanvas();
-    auto canvas = rasterHelper->getCanvas();
+    auto canvas = glHelper->getCanvas();
+    //auto canvas = rasterHelper->getCanvas();
     auto bg = tvg::Shape::gen();
     bg->appendRect(w-200, h-200, 160, 160);
     bg->fill(116, 125, 255);
@@ -133,16 +120,16 @@ LRESULT MainWindow::processWinMsg(UINT msg, WPARAM wParam, LPARAM lParam)
             //todo minimize
             w = LOWORD(lParam);
             h = HIWORD(lParam);
-            //glHelper->resize();
-            rasterHelper->resize();
+            glHelper->resize();
+            //rasterHelper->resize();
             return 0;
         }
         case WM_PAINT: {
             PAINTSTRUCT ps;
             auto hdc = BeginPaint(hwnd, &ps);
             paint();
-            //glHelper->blitToScreen(hdc);
-            rasterHelper->blitToScreen(hdc);
+            glHelper->blitToScreen(hdc);
+            //rasterHelper->blitToScreen(hdc);
             ReleaseDC(hwnd, hdc);
             EndPaint(hwnd, &ps);
             return 0;
