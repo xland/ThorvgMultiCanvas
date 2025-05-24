@@ -2,6 +2,7 @@
 #include <Windows.h>
 #include <stdint.h>
 #include <thorvg.h>
+#include <memory>
 class RasterHelper
 {
 	public:

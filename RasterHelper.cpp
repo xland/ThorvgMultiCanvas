@@ -22,11 +22,10 @@ void RasterHelper::resize()
     }
     buffer = new uint32_t[w * h];
     if (canvas) {
-        canvas->clear(true);
         canvas.reset();
     }
-    canvas = tvg::SwCanvas::gen();
-    canvas->target(buffer,w, w, h, tvg::SwCanvas::ARGB8888);
+    canvas = std::unique_ptr<tvg::SwCanvas>(tvg::SwCanvas::gen());
+    canvas->target(buffer,w, w, h, tvg::ColorSpace::ABGR8888S);
 }
 
 void RasterHelper::blitToScreen(HDC hdc)

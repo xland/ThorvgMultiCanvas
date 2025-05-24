@@ -1,5 +1,6 @@
 #pragma once
 #include <Windows.h>
+#include <memory>
 #include <gl/GL.h>
 #include <gl/GLU.h>
 #include <stdint.h>

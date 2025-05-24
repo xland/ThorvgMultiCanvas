@@ -8,7 +8,7 @@
 
 MainWindow::MainWindow()
 {
-    tvg::Initializer::init(tvg::CanvasEngine::Gl, 1);
+    tvg::Initializer::init(1);
     //tvg::Initializer::init(tvg::CanvasEngine::Sw, 4);
 	initWinPosSize();
 	initImgs();

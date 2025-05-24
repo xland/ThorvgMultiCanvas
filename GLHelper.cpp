@@ -62,7 +62,6 @@ void GLHelper::resize()
         w = rect.right - rect.left;
         h = rect.bottom - rect.top;
     }
-
     fglGenFramebuffers(1, &fbo);
     fglBindFramebuffer(GL_FRAMEBUFFER, fbo);
     fglGenTextures(1, &texture);
@@ -74,11 +73,10 @@ void GLHelper::resize()
     fglBindFramebuffer(GL_FRAMEBUFFER, 0);
     fglBindTexture(GL_TEXTURE_2D, 0);
     if (canvas) {
-        canvas->clear(true);
         canvas.reset();
     }
-    canvas = tvg::GlCanvas::gen();
-    canvas->target(fbo, w, h);
+    canvas = std::unique_ptr<tvg::GlCanvas>(tvg::GlCanvas::gen());
+    auto result = canvas->target(context,fbo, w, h, tvg::ColorSpace::ARGB8888);
 }
 
 void GLHelper::initContext()
